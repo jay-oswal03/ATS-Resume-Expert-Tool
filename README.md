@@ -39,6 +39,9 @@ This Streamlit powered ATS(Applicant Tracking System) leverages the Gemini Pro V
    streamlit run app.py
    ```
 
+6. **Application UI**
+![Image](images/screenshot1.png)
+
 ## License
 
 This project is licensed under the MIT License.
