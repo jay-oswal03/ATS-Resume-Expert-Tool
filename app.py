@@ -36,17 +36,18 @@ def input_pdf_setup(uploaded_file):
                     "data": base64.b64encode(img_byte_arr).decode()
                 }
             ]
-        return pdf_parts
+        return pdf_parts, img_byte_arr
     else:
         raise FileNotFoundError("No file uploaded")
 
 
 # Streamlit App
-st.set_page_config(page_title="ATS Resume Expert", layout="wide")
-st.markdown("""
+st.set_page_config(page_title="Resume Data Extractor", layout="wide")
+custom_css = """
     <style>
     .main {
-        background-color: #f0f2f6;
+        background-color: #1e1e1e;
+        color: white;
     }
     .stButton button {
         background-color: #007BFF;
@@ -60,20 +61,16 @@ st.markdown("""
     .stButton button:hover {
         background-color: #0056b3;
     }
-    .stHeader h1 {
-        color: #007BFF;
-        text-align: center;
-        margin-bottom: 30px;
+    .stHeader h1, .stSubheader, .stMarkdown, .stFileUploader label {
+        color: #ffffff;
     }
     .stTextArea, .stFileUploader {
-        background-color: white;
+        background-color: #2c2c2c;
         border-radius: 10px;
         padding: 10px;
         margin-bottom: 20px;
         font-size: 16px;
-    }
-    .stFileUploader label {
-        font-weight: bold;
+        color: white;
     }
     .stSpinner {
         text-align: center;
@@ -84,8 +81,19 @@ st.markdown("""
     .css-9s5bis {
         text-align: center;
     }
+    .uploaded-file-preview {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .uploaded-file-preview img {
+        max-width: 100%;
+        height: auto;
+    }
     </style>
-""", unsafe_allow_html=True)
+"""
+
+st.markdown(custom_css, unsafe_allow_html=True)
 
 st.header("ATS Resume Expert")
 
@@ -95,11 +103,18 @@ with st.container():
                               height=150, placeholder="Paste the job description here...")
 
 with st.container():
-    st.subheader("Upload the Resume")
-    uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
+    st.subheader("Choose a file...")
+    uploaded_file = st.file_uploader("", type=["pdf"])
 
 if uploaded_file is not None:
     st.success("PDF Uploaded Successfully")
+
+    pdf_parts, first_page_bytes = input_pdf_setup(uploaded_file)
+
+    with st.container():
+        st.subheader("View Uploaded Resume")
+        st.image(first_page_bytes,
+                 caption="Uploaded Resume - First Page", use_column_width=True)
 
 with st.container():
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -156,27 +171,23 @@ Additionally, recommend reputable sources or platforms where the candidate can a
 In your output, provide specific online course or youtube videos, or links to other resources they can use to enhance and expand their skillset.
 """
 
-
 if submit1:
     if uploaded_file is not None:
-        pdf_content = input_pdf_setup(uploaded_file)
-        response = get_gemini_response(input_prompt1, pdf_content, input_text)
+        response = get_gemini_response(input_prompt1, pdf_parts, input_text)
         st.subheader("Evaluation Result")
         st.write(response)
     else:
         st.error("Please upload the resume")
 elif submit2:
     if uploaded_file is not None:
-        pdf_content = input_pdf_setup(uploaded_file)
-        response = get_gemini_response(input_prompt2, pdf_content, input_text)
+        response = get_gemini_response(input_prompt2, pdf_parts, input_text)
         st.subheader("Percentage Match Result")
         st.write(response)
     else:
         st.error("Please upload the resume")
 elif submit3:
     if uploaded_file is not None:
-        pdf_content = input_pdf_setup(uploaded_file)
-        response = get_gemini_response(input_prompt3, pdf_content, input_text)
+        response = get_gemini_response(input_prompt3, pdf_parts, input_text)
         st.subheader("Suggested Skills and Certifications")
         st.write(response)
     else:
